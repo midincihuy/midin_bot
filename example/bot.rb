@@ -1,10 +1,16 @@
 require 'telegram_bot'
 require 'pp'
 require 'logger'
+require 'yaml'
 
 logger = Logger.new(STDOUT, Logger::DEBUG)
 
-bot = TelegramBot.new(token: 'YOUR KEY GOES HERE', logger: logger)
+env_file = File.join('config','local_env.yml')
+YAML.load(File.open(env_file)).each do |key, value|
+  ENV[key.to_s] = value
+end if File.exists?(env_file)
+
+bot = TelegramBot.new(token: ENV['TELEGRAM_BOT_API_KEY'], logger: logger)
 logger.debug "starting telegram bot"
 
 bot.get_updates(fail_silently: true) do |message|
@@ -15,6 +21,22 @@ bot.get_updates(fail_silently: true) do |message|
     case command
     when /greet/i
       reply.text = "Hello, #{message.from.first_name}!"
+    when /what is your name?/i
+      me = bot.get_me()
+      reply.text = "My name is #{me.first_name}!"
+    when /greet/i
+      reply.text = "Hello, #{message.from.first_name}!"
+    when /coba aja/i
+      reply.text = "command coba"
+    when /coba/i
+      reply.text = "ini hanya coba coba"
+    when /apa kabar/i
+      reply.text = "Aku baik baik saja"
+    when /check/i
+      cmd = "date"
+      value = `#{cmd}`
+      reply.text = "checking something here #{value}!"
+     
     else
       reply.text = "#{message.from.first_name}, have no idea what #{command.inspect} means."
     end
